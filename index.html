@@ -1,0 +1,109 @@
+<html>
+<head>V
+  <title>Versant Full System</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+  <style>
+    body { font-family: Arial; margin: 30px; }
+    input, textarea { width: 100%; margin: 5px 0; padding: 8px; }
+    button { padding: 10px; background: #3498db; color: white; border: none; }
+  </style>
+</head>
+<body>
+
+<h1>Versant Test System</h1>
+
+<div id="auth">
+  <h2>Login / Signup</h2>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="signup()">Signup</button>
+  <button onclick="login()">Login</button>
+</div>
+
+<div id="test" style="display:none;">
+  <h2>Test</h2>
+  <textarea id="a" placeholder="Read aloud"></textarea>
+  <input id="c" placeholder="Sentence build">
+  <input id="e" placeholder="Typing">
+  <input id="f" placeholder="Completion">
+  <input id="g" placeholder="Dictation">
+  <textarea id="h" placeholder="Reconstruction"></textarea>
+  <textarea id="i" placeholder="Opinion"></textarea>
+
+  <button onclick="submitTest()">Submit</button>
+  <button onclick="logout()">Logout</button>
+
+  <h3 id="result"></h3>
+</div>
+
+<script>
+// 🔥 REPLACE WITH YOUR FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+function signup() {
+  let email = emailInput();
+  let pass = passwordInput();
+  auth.createUserWithEmailAndPassword(email, pass)
+    .then(()=>alert("Signup successful"))
+    .catch(e=>alert(e.message));
+}
+
+function login() {
+  let email = emailInput();
+  let pass = passwordInput();
+  auth.signInWithEmailAndPassword(email, pass)
+    .then(()=>showTest())
+    .catch(e=>alert(e.message));
+}
+
+function logout() {
+  auth.signOut();
+  location.reload();
+}
+
+function emailInput(){return document.getElementById("email").value}
+function passwordInput(){return document.getElementById("password").value}
+
+function showTest(){
+  document.getElementById("auth").style.display="none";
+  document.getElementById("test").style.display="block";
+}
+
+auth.onAuthStateChanged(user=>{
+  if(user) showTest();
+});
+
+function submitTest(){
+  let score = 0;
+
+  if(document.getElementById("a").value.length>20) score+=10;
+  if(document.getElementById("c").value.includes("innovation")) score+=10;
+  if(document.getElementById("e").value.includes("Digital")) score+=10;
+  if(document.getElementById("f").value==="will") score+=10;
+  if(document.getElementById("g").value.includes("Financial")) score+=10;
+  if(document.getElementById("h").value.length>20) score+=15;
+  if(document.getElementById("i").value.length>20) score+=15;
+
+  document.getElementById("result").innerText = "Score: "+score;
+
+  let user = auth.currentUser;
+  db.collection("results").add({
+    email: user.email,
+    score: score,
+    time: new Date()
+  });
+}
+</script>
+
+</body>
+</html>
